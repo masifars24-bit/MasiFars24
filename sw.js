@@ -1,7 +1,7 @@
 /* Massi Fars · Service Worker
    هەر وەشانێکی نوێ: تەنها VERSION بگۆڕە (و mf-build لە index.html).
    وەشانی نوێ دادەبەزێت و چاوەڕێ دەکات؛ تەنها کاتێک بەکارهێنەر «نوێ بکەرەوە» دەکات چالاک دەبێت. */
-const VERSION = 'V1.0.3';
+const VERSION = 'V1.0.4';
 const CACHE = 'mf-' + VERSION;
 const SCOPE = self.registration.scope;
 
