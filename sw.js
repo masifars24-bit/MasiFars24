@@ -1,4 +1,4 @@
-/* Massi Fars · Service Worker  (V1.0.2)
+/* Massi Fars · Service Worker  (V1.0.4)
    ئەم فایلە لەگەڵ سکریپتی mf-sw-register ی index.html ڕێک دەکەوێت:
    پەیامەکان: STATUS · CHECK · ACTIVATE
    - وەشانی ئێستا (ptr) لە cache ـی mfp-<id> ڕادەگیرێت
