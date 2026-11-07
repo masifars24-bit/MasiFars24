@@ -10,12 +10,13 @@
    5. ڕزگارکردن: ئەگەر ئەپەکە گیرا، ?mf_reset=1 لە کۆتایی ناونیشان زیاد بکە.
 
    هەر وەشانێکی نوێ: mf-build لە index.html + changelog.json + VERSION ی خوارەوە (بۆ ئەوەی براوزەر SW نوێ بکاتەوە). */
-const VERSION = 'V1.0.22';
+const VERSION = 'V1.0.23';
 const PAGES = 'mf-pages', META = 'mf-meta';
 const SCOPE = self.registration.scope;
 const PTR = SCOPE + '__mf/ptr', PEND = SCOPE + '__mf/pending';
 const pageKey = function (id) { return SCOPE + '__mf/page/' + id; };
 const MIN_BYTES = 100000;
+const SBU = 'https://wtzffmorfclxivopvsit.supabase.co', SBK = 'sb_publishable_YDz--eVlnrTgZJ6hKJwLig_bzY1-Fjg';
 const LABEL_RE = /name=["']mf-build["']\s+content=["']([^"']*)["']/;
 
 let queue = Promise.resolve();   /* هەموو گۆڕانکارییەکان بە ڕیز */
@@ -192,6 +193,27 @@ self.addEventListener('message', function (e) {
   e.waitUntil(run.then(function (r) { port.postMessage(r); }, function () { port.postMessage(null); }));
 });
 
+/* ئەپدێتی خۆکار لە کاتی کردنەوەی ئەپەکە: ئەگەر وەشانی نوێ پێشتر دابەزێنرابێت و ئادمین ناردبێتی، هەر ئێستا دەمەزرێت و بەکارهێنەر ڕاستەوخۆ وەشانی نوێ دەبینێت (بێ نیشاندانی ئەپی کۆن) */
+function vnum(v) { return String(v || '').replace(/[^0-9.]/g, '').split('.').map(function (x) { return parseInt(x, 10) || 0; }); }
+function newer(a, b) { if (!b) return true; const x = vnum(a), y = vnum(b), n = Math.max(x.length, y.length); for (let k = 0; k < n; k++) { const p = x[k] || 0, q = y[k] || 0; if (p !== q) return p > q; } return false; }
+async function releasedUpd() {
+  const ctl = new AbortController(), t = setTimeout(function () { try { ctl.abort(); } catch (e) {} }, 1500);
+  try {
+    const r = await fetch(SBU + '/rest/v1/rpc/get_sysctl', { method: 'POST', headers: { apikey: SBK, Authorization: 'Bearer ' + SBK, 'Content-Type': 'application/json' }, body: '{}', cache: 'no-store', signal: ctl.signal });
+    if (!r.ok) return null;
+    const d = await r.json(), u = d && d.upd, now = Date.parse(r.headers.get('date') || '') || Date.now();
+    if (!u || u.hold || !u.rid || !u.ver) return null;
+    if (u.go && now < u.go) return null;
+    return u;
+  } catch (e) { return null; } finally { clearTimeout(t); }
+}
+async function instantPromote() {
+  const pend = await getJ(PEND); if (!pend) return;
+  const ptr = await getJ(PTR); if (ptr && !newer(pend.label, ptr.label)) return;
+  const u = await releasedUpd(); if (!u || !newer(u.ver, ptr && ptr.label)) return;
+  await exclusive(function () { return doActivate(pend.id, pend.label); });
+}
+
 /* کردنەوەی لاپەڕەکە: وەشانی ئێستا (ptr) لە cache، ئەگەر نەبوو لە ئینتەرنێت */
 self.addEventListener('fetch', function (e) {
   const req = e.request;
@@ -202,6 +224,7 @@ self.addEventListener('fetch', function (e) {
     return;
   }
   e.respondWith((async function () {
+    try { await instantPromote(); } catch (x) {}
     const ptr = await getJ(PTR), pc = await caches.open(PAGES);
     if (ptr) { const hit = await pc.match(pageKey(ptr.id)); if (hit) return hit; }
     try { return await fetch(req); }
