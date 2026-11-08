@@ -10,7 +10,7 @@
    5. ڕزگارکردن: ئەگەر ئەپەکە گیرا، ?mf_reset=1 لە کۆتایی ناونیشان زیاد بکە.
 
    هەر وەشانێکی نوێ: mf-build لە index.html + changelog.json + VERSION ی خوارەوە (بۆ ئەوەی براوزەر SW نوێ بکاتەوە). */
-const VERSION = 'V1.0.23';
+const VERSION = 'V1.0.24';
 const PAGES = 'mf-pages', META = 'mf-meta';
 const SCOPE = self.registration.scope;
 const PTR = SCOPE + '__mf/ptr', PEND = SCOPE + '__mf/pending';
